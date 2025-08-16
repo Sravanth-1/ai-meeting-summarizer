@@ -26,7 +26,7 @@ const limiter = rateLimit({ windowMs: 60 * 1000, max: 20 });
 app.use('/api/', limiter);
 
 // --- LLM helper ---
-const SYSTEM_PROMPT = `You are a precise meeting notes summarizer.`;
+const SYSTEM_PROMPT = ``;
 
 function buildUserPrompt(transcript, extra) {
   // Use the prompt exactly as user provides, no fallback
@@ -121,4 +121,5 @@ app.post("/api/send-email", async (req, res) => {
 app.listen(PORT, () => {
   console.log(`✅ Server running on http://localhost:${PORT}`);
 });
+
 
