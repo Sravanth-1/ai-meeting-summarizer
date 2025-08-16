@@ -19,6 +19,7 @@ const FROM_EMAIL = process.env.FROM_EMAIL;
 
 if (!GROQ_API_KEY) console.warn('⚠️ Missing GROQ_API_KEY');
 if (!FROM_EMAIL) console.warn('⚠️ Missing FROM_EMAIL (for email sending)');
+app.set('trust proxy', 1);
 
 // --- Rate limit ---
 const limiter = rateLimit({ windowMs: 60 * 1000, max: 20 });
@@ -120,3 +121,4 @@ app.post("/api/send-email", async (req, res) => {
 app.listen(PORT, () => {
   console.log(`✅ Server running on http://localhost:${PORT}`);
 });
+
