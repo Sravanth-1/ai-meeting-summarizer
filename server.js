@@ -6,7 +6,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const app = express();
-app.use(express.json({ limit: '5mb' })); // bigger payload if transcript is large
+app.use(express.json({ limit: '5mb' })); // for large transcripts
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
 
@@ -25,11 +25,11 @@ const limiter = rateLimit({ windowMs: 60 * 1000, max: 20 });
 app.use('/api/', limiter);
 
 // --- LLM helper ---
-const SYSTEM_PROMPT = `You are a precise meeting notes summarizer`;
+const SYSTEM_PROMPT = `You are a precise meeting notes summarizer.`;
 
 function buildUserPrompt(transcript, extra) {
-  const fallback = '';
-  return `Transcript:\n${transcript}\n\nAdditional instruction from user:\n${(extra && extra.trim()) || fallback}`;
+  // Use the prompt exactly as user provides, no fallback
+  return `Transcript:\n${transcript}\n\nAdditional instruction from user:\n${extra || ''}`;
 }
 
 async function callGroq(messages) {
@@ -65,7 +65,7 @@ app.post('/api/summarize', async (req, res) => {
   try {
     const { transcript, prompt } = req.body || {};
     if (!transcript || !transcript.trim()) {
-      return res.status(400).json({ error: 'transcript is required' });
+      return res.status(400).json({ error: 'Transcript is required' });
     }
 
     const messages = [
@@ -83,24 +83,18 @@ app.post('/api/summarize', async (req, res) => {
 
 // --- Email via Resend ---
 let resend;
-if (process.env.RESEND_API_KEY) {
-  resend = new Resend(process.env.RESEND_API_KEY);
+if (RESEND_API_KEY) {
+  resend = new Resend(RESEND_API_KEY);
 }
 
 app.post("/api/send-email", async (req, res) => {
   try {
     console.log("Incoming request body:", req.body);
-
     const { email, summary } = req.body || {};
 
-    if (!email) {
-      return res.status(400).json({ error: "Recipient email required" });
-    }
-    if (!summary || !summary.trim()) {
-      return res.status(400).json({ error: "Summary content required" });
-    }
+    if (!email) return res.status(400).json({ error: "Recipient email required" });
+    if (!summary || !summary.trim()) return res.status(400).json({ error: "Summary content required" });
 
-    // Send email via Resend
     if (resend) {
       console.log("✅ Sending email via Resend...");
       const out = await resend.emails.send({
@@ -123,8 +117,6 @@ app.post("/api/send-email", async (req, res) => {
   }
 });
 
-
 app.listen(PORT, () => {
   console.log(`✅ Server running on http://localhost:${PORT}`);
 });
-
