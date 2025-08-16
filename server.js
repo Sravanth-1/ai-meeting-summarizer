@@ -28,7 +28,7 @@ app.use('/api/', limiter);
 const SYSTEM_PROMPT = `You are a precise meeting notes summarizer`;
 
 function buildUserPrompt(transcript, extra) {
-  const fallback = 'Summarize clearly. Extract action items with owners & due dates.';
+  const fallback = '';
   return `Transcript:\n${transcript}\n\nAdditional instruction from user:\n${(extra && extra.trim()) || fallback}`;
 }
 
@@ -127,3 +127,4 @@ app.post("/api/send-email", async (req, res) => {
 app.listen(PORT, () => {
   console.log(`✅ Server running on http://localhost:${PORT}`);
 });
+
