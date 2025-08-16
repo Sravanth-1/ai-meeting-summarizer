@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Meeting Summarizer</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 700px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #f9fafb;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+      color: #222;
+    }
+    textarea, input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background: #2563eb;
+      color: white;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    button:hover {
+      background: #1d4ed8;
+    }
+    #summary {
+      margin-top: 20px;
+      padding: 15px;
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      min-height: 150px;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <h1>AI Meeting Summarizer</h1>
+
+  <label for="transcript">Paste Transcript or Upload File:</label>
+  <textarea id="transcript" rows="8" placeholder="Paste transcript here..."></textarea>
+  <input type="file" id="transcriptFile" accept=".txt" />
+
+  <label for="prompt">Custom Instruction:</label>
+  <input id="prompt" placeholder="e.g., Summarize action items for executives"/>
+
+  <button onclick="generateSummary()">Generate Summary</button>
+
+  <h3>Summary:</h3>
+  <textarea id="summary" rows="10" placeholder="Your summary will appear here..."></textarea>
+
+  <h3>Share Summary via Email</h3>
+  <input id="email" type="email" placeholder="Recipient email"/>
+  <button onclick="sendEmail()">Send Email</button>
+
+  <script>
+    async function getTranscript() {
+      const fileInput = document.getElementById("transcriptFile");
+      const pastedText = document.getElementById("transcript").value.trim();
+
+      if (fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        return await file.text();
+      }
+      return pastedText;
+    }
+
+    async function generateSummary() {
+      const transcript = await getTranscript();
+      const prompt = document.getElementById("prompt").value;
+
+      if (!transcript) {
+        alert("Please provide a transcript (paste or upload).");
+        return;
+      }
+
+      const res = await fetch("/api/summarize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ transcript, prompt })
+      });
+
+      const data = await res.json();
+      document.getElementById("summary").value = data.summary || "Error generating summary";
+    }
+
+    async function sendEmail() {
+  const email = document.getElementById("email").value;
+  const summary = document.getElementById("summary").value;
+
+  if (!email || !summary) {
+    alert("Please provide both email and summary.");
+    return;
+  }
+
+  const res = await fetch("/api/send-email", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, summary }) // send summary
+  });
+
+  const data = await res.json();
+  alert(data.ok ? "Email sent!" : data.error);
+}
+
+  </script>
+</body>
+</html>
